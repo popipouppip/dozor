@@ -107,12 +107,21 @@ const PARSERS = { youtube, github, rss, telegram };
 async function checkSite(site) {
   const started = Date.now();
   try {
-    const r = await fetch(site.url, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (dozor)' },
-      redirect: 'follow',
-      signal: AbortSignal.timeout(20000)
-    });
-    const body = await r.text();
+    // две попытки: разовый сетевой сбой не должен поднимать ложную тревогу
+    let r, body, lastErr;
+    for (let i = 0; i < 2; i++) {
+      try {
+        r = await fetch(site.url, {
+          headers: { 'User-Agent': 'Mozilla/5.0 (dozor)' },
+          redirect: 'follow',
+          signal: AbortSignal.timeout(20000)
+        });
+        body = await r.text();
+        lastErr = null;
+        break;
+      } catch (e) { lastErr = e; await new Promise(res => setTimeout(res, 1500)); }
+    }
+    if (lastErr) throw lastErr;
     const ms = Date.now() - started;
     // HTTP 200 ещё не значит «работает» — проверяем, что страница не пустая
     // и содержит опорную строку, если она задана (урок из практики #14 в базе).
