@@ -2,4 +2,11 @@ report.json
 node_modules/
 secrets.ps1
 pismo.md
+otvet.md
+nedelya.md
+shos.md
+vopros.txt
+state.json
 dozor.log
+chat.log
+watch.log

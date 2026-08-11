@@ -198,4 +198,4 @@ async function run() {
 }
 
 if (require.main === module) run().catch(e => { console.error(e); process.exit(1); });
-module.exports = { run };
+module.exports = { run, checkSite, CFG };
