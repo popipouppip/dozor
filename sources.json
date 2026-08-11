@@ -1,0 +1,36 @@
+{
+  "days": 2,
+  "perSource": 6,
+  "interests": [
+    "ИИ-агенты, обвязка вокруг моделей, память и инструменты для агентов",
+    "Claude Code, n8n, автоматизация рутины",
+    "веб-дизайн и лендинги: приёмы, анимации, референсы",
+    "Китай: поступление в вуз, гранты и стипендии, HSK",
+    "экономика Китая, ШОС, ОПОП, БРИКС (для научной статьи)"
+  ],
+  "sources": [
+    { "type": "github", "name": "Claude Code — релизы", "repo": "anthropics/claude-code", "kind": "releases", "topic": "инструменты" },
+    { "type": "github", "name": "n8n — релизы", "repo": "n8n-io/n8n", "kind": "releases", "topic": "автоматизация" },
+    { "type": "rss", "name": "Habr — лучшее за день", "url": "https://habr.com/ru/rss/best/daily/?fl=ru", "topic": "общее" },
+    { "type": "rss", "name": "Habr — искусственный интеллект", "url": "https://habr.com/ru/rss/hubs/artificial_intelligence/articles/?fl=ru", "topic": "ии" },
+    { "type": "rss", "name": "Новости — нейросети и ИИ-агенты", "url": "https://news.google.com/rss/search?q=%D0%BD%D0%B5%D0%B9%D1%80%D0%BE%D1%81%D0%B5%D1%82%D0%B8+OR+%22%D0%98%D0%98-%D0%B0%D0%B3%D0%B5%D0%BD%D1%82%22&hl=ru&gl=RU&ceid=RU:ru", "topic": "ии" },
+    { "type": "rss", "name": "Новости — учёба в Китае и стипендии", "url": "https://news.google.com/rss/search?q=%22%D1%83%D1%87%D0%B5%D0%B1%D0%B0+%D0%B2+%D0%9A%D0%B8%D1%82%D0%B0%D0%B5%22+OR+%22%D1%81%D1%82%D0%B8%D0%BF%D0%B5%D0%BD%D0%B4%D0%B8%D1%8F+%D0%9A%D0%B8%D1%82%D0%B0%D0%B9%22&hl=ru&gl=RU&ceid=RU:ru", "topic": "китай", "days": 14 },
+    { "type": "rss", "name": "News — Anthropic & Claude", "url": "https://news.google.com/rss/search?q=Anthropic+OR+%22Claude+AI%22&hl=en-US&gl=US&ceid=US:en", "topic": "ии" },
+    { "type": "youtube", "name": "Fireship", "handle": "Fireship", "topic": "разработка", "days": 5 }
+  ],
+  "sites": [
+    { "name": "ФОРМА (ЗОЖ-трекер)", "url": "https://forma-psi-ruddy.vercel.app/", "expect": "" },
+    { "name": "ЭРУДИТ (викторина)", "url": "https://forma-psi-ruddy.vercel.app/quiz/", "expect": "" },
+    { "name": "СЮЭ (китайский)", "url": "https://forma-psi-ruddy.vercel.app/xue/", "expect": "" },
+    { "name": "План лета", "url": "https://plan-alpha-blue.vercel.app/", "expect": "" },
+    { "name": "Легендариум (заметки)", "url": "https://legendarium-kappa.vercel.app/", "expect": "" },
+    { "name": "TrendSpot", "url": "https://trend-spot-8nim.vercel.app/", "expect": "" },
+    { "name": "Картотека (библиотека)", "url": "https://biblioteka-tawny-alpha.vercel.app/", "expect": "" },
+    { "name": "Мастер-план (work4)", "url": "https://masterplan-konstruktor.vercel.app/", "expect": "" },
+    { "name": "ЗЕРНО (кофе)", "url": "https://carrot-juice-landing.vercel.app/", "expect": "" },
+    { "name": "МАССИВ (эталон-лендинг)", "url": "https://architect-ivory-nine.vercel.app/", "expect": "" }
+  ],
+  "deadlines": [
+    { "name": "План лета: закрыть этапы до отъезда", "date": "2026-09-01", "note": "школа → сайты → портфолио → рынок; после 1 сентября Лёня уезжает примерно на год" }
+  ]
+}
