@@ -1,2 +1,5 @@
 report.json
 node_modules/
+secrets.ps1
+pismo.md
+dozor.log
