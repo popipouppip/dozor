@@ -8,6 +8,5 @@ shos.md
 vopros.txt
 istoriya.md
 state.json
-dozor.log
-chat.log
-watch.log
+*.log
+*.lock
