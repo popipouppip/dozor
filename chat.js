@@ -8,6 +8,8 @@ const path = require('path');
 const DIR = __dirname;
 const STATE = path.join(DIR, 'state.json');
 const VOPROS = path.join(DIR, 'vopros.txt');
+const HISTORY = path.join(DIR, 'istoriya.md');
+const KEEP = 30; // сколько последних реплик держим — чтобы файл не рос бесконечно
 const TOKEN = process.env.TG_TOKEN;
 const CHAT = String(process.env.TG_CHAT || '');
 
@@ -50,6 +52,20 @@ async function main() {
   if (!questions.length) { console.log('новых вопросов нет (только служебное)'); process.exit(2); }
 
   fs.writeFileSync(VOPROS, questions.join('\n---\n'), 'utf8');
+
+  // дописываем вопросы в историю переписки и подрезаем её до последних KEEP реплик
+  const when = new Date().toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  let history = '';
+  try { history = fs.readFileSync(HISTORY, 'utf8'); } catch { history = '# Переписка с Лёней\n'; }
+  history += questions.map(q => `\n## Лёня (${when})\n${q}\n`).join('');
+
+  const blocks = history.split(/\n(?=## )/);
+  if (blocks.length > KEEP + 1) {
+    history = blocks[0].startsWith('# ') ? blocks[0] + '\n' + blocks.slice(-KEEP).join('\n')
+                                         : blocks.slice(-KEEP).join('\n');
+  }
+  fs.writeFileSync(HISTORY, history, 'utf8');
+
   console.log(`вопросов: ${questions.length}`);
   process.exit(0);
 }
