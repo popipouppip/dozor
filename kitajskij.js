@@ -20,7 +20,9 @@ function writeState(s) {
 }
 
 const state = readState();
-const from = state.chineseCursor || 0;
+// в облаке state.json нет — тогда позиция считается от даты, слова всё равно новые каждый день
+const byDate = (Math.floor(Date.now() / 86400000) * N) % WORDS.length;
+const from = state.chineseCursor ?? byDate;
 
 const picked = [];
 for (let i = 0; i < N && i < WORDS.length; i++) {
@@ -29,7 +31,7 @@ for (let i = 0; i < N && i < WORDS.length; i++) {
 
 state.chineseCursor = (from + N) % WORDS.length;
 state.chineseLastRun = new Date().toISOString();
-writeState(state);
+try { writeState(state); } catch {}
 
 const lines = picked.map(w => `${w.hz} — ${w.py} — ${w.ru}`);
 const passed = from + N >= WORDS.length ? WORDS.length : from + N;
