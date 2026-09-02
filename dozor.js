@@ -1,5 +1,5 @@
 // ДОЗОР — сборщик фактов для ночного агента.
-// Ничего не оценивает: собирает сырьё (источники, здоровье сайтов, дедлайны)
+// Ничего не оценивает: собирает сырьё (источники, дедлайны)
 // и отдаёт компактный JSON. Смыслом занимается агент, который это читает.
 // Запуск: node dozor.js [--json] [--days N]
 
@@ -103,40 +103,6 @@ async function telegram(src) {
 
 const PARSERS = { youtube, github, rss, telegram };
 
-// ── здоровье сайтов Лёни ──
-async function checkSite(site) {
-  const started = Date.now();
-  try {
-    // две попытки: разовый сетевой сбой не должен поднимать ложную тревогу
-    let r, body, lastErr;
-    for (let i = 0; i < 2; i++) {
-      try {
-        r = await fetch(site.url, {
-          headers: { 'User-Agent': 'Mozilla/5.0 (dozor)' },
-          redirect: 'follow',
-          signal: AbortSignal.timeout(20000)
-        });
-        body = await r.text();
-        lastErr = null;
-        break;
-      } catch (e) { lastErr = e; await new Promise(res => setTimeout(res, 1500)); }
-    }
-    if (lastErr) throw lastErr;
-    const ms = Date.now() - started;
-    // HTTP 200 ещё не значит «работает» — проверяем, что страница не пустая
-    // и содержит опорную строку, если она задана (урок из практики #14 в базе).
-    const tooSmall = body.replace(/\s+/g, '').length < 400;
-    const missing = site.expect && !body.toLowerCase().includes(site.expect.toLowerCase());
-    return {
-      name: site.name, url: site.url, status: r.status, ms,
-      ok: r.ok && !tooSmall && !missing,
-      note: !r.ok ? `код ${r.status}` : tooSmall ? 'страница почти пустая' : missing ? `нет опорного текста «${site.expect}»` : ''
-    };
-  } catch (e) {
-    return { name: site.name, url: site.url, status: 0, ms: Date.now() - started, ok: false, note: 'не отвечает: ' + e.message };
-  }
-}
-
 // ── дедлайны ──
 function deadlines() {
   const today = new Date();
@@ -168,16 +134,12 @@ async function run() {
   }));
   feed.push(...collected);
 
-  const sites = await Promise.all((CFG.sites || []).map(checkSite));
-
   const report = {
     generatedAt: new Date().toISOString(),
     windowDays: DAYS,
     interests: CFG.interests || [],
     freshCount: feed.reduce((n, g) => n + g.items.length, 0),
     feed,
-    sites,
-    sitesDown: sites.filter(s => !s.ok).map(s => `${s.name}: ${s.note}`),
     deadlines: deadlines()
   };
 
@@ -190,12 +152,10 @@ async function run() {
     console.log(`· ${g.source}${g.topic ? ' [' + g.topic + ']' : ''}: ${g.error ? 'ОШИБКА — ' + g.error : g.items.length + ' свежих'}`);
     for (const i of g.items) console.log(`    – ${i.title}`);
   }
-  console.log('\nСайты:');
-  for (const s of sites) console.log(`  ${s.ok ? 'ok  ' : 'ПАДЁТ'} ${s.name} — ${s.status} за ${s.ms}мс ${s.note}`);
   console.log('\nДедлайны:');
   for (const d of report.deadlines) console.log(`  ${d.daysLeft} дн. — ${d.name}`);
   console.log(`\nИтого свежего: ${report.freshCount}. Сырьё → report.json`);
 }
 
 if (require.main === module) run().catch(e => { console.error(e); process.exit(1); });
-module.exports = { run, checkSite, CFG };
+module.exports = { run, CFG };
