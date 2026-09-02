@@ -70,4 +70,10 @@ async function main() {
   process.exit(0);
 }
 
-main().catch(e => { console.error('проверка сообщений упала:', e.message); process.exit(1); });
+main().catch(e => {
+  // Нет VPN — Telegram недоступен. Это не поломка, просто молчим до следующего запуска,
+  // иначе каждые 10 минут в лог сыпался красный стек от PowerShell.
+  const net = /fetch failed|timeout|abort|ENOTFOUND|ECONNRESET|EAI_AGAIN/i.test(e.message || '');
+  console.log(net ? 'нет связи с Telegram (VPN выключен?) — пропускаем' : 'проверка сообщений упала: ' + e.message);
+  process.exit(2);
+});

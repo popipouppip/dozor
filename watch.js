@@ -19,18 +19,32 @@ function writeState(s) {
 
 async function send(text) {
   if (!TOKEN || !CHAT) { console.log('нет TG_TOKEN/TG_CHAT — сообщение не отправлено'); return; }
-  const r = await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ chat_id: CHAT, text, parse_mode: 'HTML', link_preview_options: { is_disabled: true } }),
-    signal: AbortSignal.timeout(25000)
-  });
-  const data = await r.json();
-  if (!data.ok) throw new Error(data.description || 'ошибка Telegram');
+  // Telegram у нас доступен только через VPN — даём три попытки с паузой
+  let lastErr;
+  for (let i = 0; i < 3; i++) {
+    try {
+      const r = await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: CHAT, text, parse_mode: 'HTML', link_preview_options: { is_disabled: true } }),
+        signal: AbortSignal.timeout(25000)
+      });
+      const data = await r.json();
+      if (!data.ok) throw new Error(data.description || 'ошибка Telegram');
+      return;
+    } catch (e) { lastErr = e; await new Promise(res => setTimeout(res, 5000)); }
+  }
+  throw lastErr;
 }
 
 async function main() {
   const results = await Promise.all((CFG.sites || []).map(checkSite));
+  // Если легли ВСЕ сайты разом — это не они, это у нас нет интернета (VPN выключен).
+  // Молчим и не трогаем state, иначе потом придёт ложное «упало» и «снова работает».
+  if (results.length && results.every(r => !r.ok)) {
+    console.log('все сайты недоступны — похоже, нет сети у нас; проверка пропущена');
+    return;
+  }
   const state = readState();
   const prev = state.sitesState || {};
   const now = {};

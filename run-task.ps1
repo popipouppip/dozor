@@ -37,8 +37,18 @@ Remove-Item Env:CLAUDECODE -ErrorAction SilentlyContinue
 Remove-Item Env:CLAUDE_CODE_ENTRYPOINT -ErrorAction SilentlyContinue
 Remove-Item Env:CLAUDE_CODE_SSE_PORT -ErrorAction SilentlyContinue
 
-# The Anthropic API is region-blocked here: right after boot the VPN is often not up yet
-# and every call dies with 403 "Request not allowed". Wait for it (up to 25 min) before starting.
+# The Anthropic API is region-blocked here, so DOZOR needs the VPN (Koala Clash) to be up.
+# Leonid starts it by hand, often much later than the task fired - so we start it ourselves
+# through the app's own elevation task and then wait patiently instead of giving up early.
+function Start-Vpn {
+    if (-not (Get-Process -Name "Koala Clash" -ErrorAction SilentlyContinue)) {
+        "[$(Get-Date -Format 'yyyy-MM-dd HH:mm')] $Task - VPN is down, starting Koala Clash" |
+            Out-File -FilePath $log -Append -Encoding utf8
+        & schtasks /run /tn "koala-clash-run" 2>&1 | Out-Null
+        Start-Sleep -Seconds 45
+    }
+}
+
 function Test-ApiReachable {
     try {
         Invoke-WebRequest -Uri "https://api.anthropic.com/v1/models" -Method GET -TimeoutSec 10 -UseBasicParsing | Out-Null
@@ -51,18 +61,21 @@ function Test-ApiReachable {
     }
 }
 
-$waited = 0
+$maxWait = 21600   # 6 hours - a late digest still beats no digest
+$waited  = 0
+Start-Vpn
 while (-not (Test-ApiReachable)) {
-    if ($waited -ge 1500) {
-        "[$(Get-Date -Format 'yyyy-MM-dd HH:mm')] $Task - API unreachable for 25 min (VPN down?), skipped" |
+    if ($waited -ge $maxWait) {
+        "[$(Get-Date -Format 'yyyy-MM-dd HH:mm')] $Task - API unreachable for $([int]($maxWait/60)) min (VPN down?), skipped" |
             Out-File -FilePath $log -Append -Encoding utf8
         exit 1
     }
-    Start-Sleep -Seconds 30
-    $waited += 30
+    Start-Sleep -Seconds 60
+    $waited += 60
+    if ($waited % 1800 -eq 0) { Start-Vpn }   # try the VPN again every 30 min
 }
 if ($waited -gt 0) {
-    "[$(Get-Date -Format 'yyyy-MM-dd HH:mm')] $Task - waited $waited s for API" |
+    "[$(Get-Date -Format 'yyyy-MM-dd HH:mm')] $Task - waited $([int]($waited/60)) min for API" |
         Out-File -FilePath $log -Append -Encoding utf8
 }
 
